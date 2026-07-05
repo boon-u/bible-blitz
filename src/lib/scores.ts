@@ -12,7 +12,7 @@ export async function createSession(
   supabase: SupabaseClient,
   profileId: string,
   mode: CanonMode,
-): Promise<string | null> {
+): Promise<{ sessionId: string | null; error: string | null }> {
   const { data, error } = await supabase
     .from('trainer_sessions')
     .insert({ profile_id: profileId, mode, total_score: 0, rounds_played: 0 })
@@ -21,9 +21,9 @@ export async function createSession(
 
   if (error) {
     console.error('Failed to create session:', error.message);
-    return null;
+    return { sessionId: null, error: error.message };
   }
-  return data.id;
+  return { sessionId: data.id, error: null };
 }
 
 export async function saveRoundResult(
@@ -41,7 +41,7 @@ export async function saveRoundResult(
     finalScore: number;
     elapsedMs: number;
   },
-): Promise<void> {
+): Promise<{ ok: boolean; error: string | null }> {
   const startBook = globalBook(round.startIndex, round).name;
   const targetBook = globalBook(round.targetIndex, round).name;
 
@@ -61,7 +61,7 @@ export async function saveRoundResult(
 
   if (roundError) {
     console.error('Failed to save round:', roundError.message);
-    return;
+    return { ok: false, error: roundError.message };
   }
 
   if (sessionId) {
@@ -72,7 +72,7 @@ export async function saveRoundResult(
       .single();
 
     if (session) {
-      await supabase
+      const { error: sessionError } = await supabase
         .from('trainer_sessions')
         .update({
           total_score: session.total_score + finalScore,
@@ -80,8 +80,15 @@ export async function saveRoundResult(
           updated_at: new Date().toISOString(),
         })
         .eq('id', sessionId);
+
+      if (sessionError) {
+        console.error('Failed to update session:', sessionError.message);
+        return { ok: false, error: sessionError.message };
+      }
     }
   }
+
+  return { ok: true, error: null };
 }
 
 export async function fetchLeaderboard(

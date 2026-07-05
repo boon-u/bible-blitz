@@ -17,7 +17,7 @@ import {
 } from './game/logic';
 import { useProfiles } from './lib/profiles';
 import { createSession, saveRoundResult } from './lib/scores';
-import { supabase } from './lib/supabase';
+import { isSupabaseConfigured, supabase } from './lib/supabase';
 import './App.css';
 
 type Screen = 'welcome' | 'playing' | 'roundComplete' | 'leaderboard';
@@ -32,6 +32,7 @@ function App() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [roundBonus, setRoundBonus] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const sessionIdRef = useRef<string | null>(null);
   const roundStart = useRef<number>(Date.now());
@@ -80,7 +81,11 @@ function App() {
                 round: next,
                 finalScore: finalRoundScore,
                 elapsedMs: elapsed,
+              }).then(({ ok, error }) => {
+                setSaveError(ok ? null : error);
               });
+            } else {
+              setSaveError(null);
             }
 
             setTimeout(() => setScreen('roundComplete'), 600);
@@ -118,14 +123,17 @@ function App() {
     setRoundBonus(0);
     setElapsedMs(0);
     roundStart.current = Date.now();
+    setSaveError(null);
     sessionIdRef.current = null;
 
     if (supabase && profiles.selected) {
-      sessionIdRef.current = await createSession(
+      const { sessionId, error } = await createSession(
         supabase,
         profiles.selected.id,
         canonMode,
       );
+      sessionIdRef.current = sessionId;
+      if (error) setSaveError(error);
     }
 
     setScreen('playing');
@@ -263,6 +271,7 @@ function App() {
                 elapsedMs={elapsedMs}
                 roundBonus={roundBonus}
                 totalScore={totalScore}
+                saveError={saveError}
                 onNextRound={nextRound}
                 onEndSession={endSession}
               />
@@ -273,6 +282,9 @@ function App() {
 
       <footer className="footer">
         <span>66 books · Binary search training</span>
+        <span className={isSupabaseConfigured ? 'footer-cloud on' : 'footer-cloud off'}>
+          {isSupabaseConfigured ? '☁️ Cloud saves on' : '📱 Local mode (no cloud saves)'}
+        </span>
         {profiles.selected && (
           <span className="footer-profile">Playing as {profiles.selected.username}</span>
         )}

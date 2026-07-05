@@ -144,10 +144,10 @@ export function useProfiles(supabase: SupabaseClient | null) {
   const selected = profiles.find((p) => p.id === selectedId) ?? null;
 
   useEffect(() => {
-    if (!loading && selectedId && profiles.length > 0 && !selected) {
+    if (!loading && selectedId && !selected) {
       clearProfile();
     }
-  }, [loading, selectedId, selected, profiles.length, clearProfile]);
+  }, [loading, selectedId, selected, clearProfile]);
 
   return {
     profiles,

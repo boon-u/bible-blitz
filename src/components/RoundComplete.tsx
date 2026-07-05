@@ -7,6 +7,7 @@ interface RoundCompleteProps {
   elapsedMs: number;
   roundBonus: number;
   totalScore: number;
+  saveError?: string | null;
   onNextRound: () => void;
   onEndSession: () => void;
 }
@@ -48,6 +49,7 @@ export function RoundComplete({
   elapsedMs,
   roundBonus,
   totalScore,
+  saveError,
   onNextRound,
   onEndSession,
 }: RoundCompleteProps) {
@@ -100,6 +102,11 @@ export function RoundComplete({
         </div>
 
         <div className="complete-actions">
+          {saveError && (
+            <p className="save-error" role="alert">
+              Score not saved to cloud: {saveError}
+            </p>
+          )}
           <motion.button
             type="button"
             className="primary-btn"
@@ -166,6 +173,11 @@ export function RoundComplete({
       </div>
 
       <div className="complete-actions">
+        {saveError && (
+          <p className="save-error" role="alert">
+            Score not saved to cloud: {saveError}
+          </p>
+        )}
         <motion.button
           type="button"
           className="primary-btn"

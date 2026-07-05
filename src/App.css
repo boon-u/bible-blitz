@@ -763,6 +763,27 @@
   font-weight: 600;
 }
 
+.footer-cloud {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.footer-cloud.on {
+  color: var(--green);
+}
+
+.footer-cloud.off {
+  color: var(--ink-soft);
+}
+
+.save-error {
+  color: var(--red);
+  font-size: 0.9rem;
+  max-width: 28rem;
+  text-align: center;
+}
+
 .timeline-segment.outside-canon {
   opacity: 0.06;
 }
